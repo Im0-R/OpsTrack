@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+node_modules/
+dist/
+.local/
+.env
+.env.*
+!.env.example
+.vs/
+*.user
+TestResults/
+*.log
+*.tsbuildinfo
