@@ -1,59 +1,66 @@
 # OpsTrack
 
-An operations workspace for teams to report, assign and monitor incidents and service requests. Built as a portfolio project demonstrating C# / ASP.NET Core and React / TypeScript development.
-
-## Project status
-
-**Phase 1 — foundation.** This repository currently contains a running API, a connected React workspace, an API health integration test and a layered solution. Authentication, ticket management and database persistence are not implemented yet. The interface does not display fabricated ticket metrics.
+An internal operations workspace for reporting incidents and service requests, assigning work, and tracking resolution. A portfolio MVP built with **C# / ASP.NET Core, EF Core and React / TypeScript**.
 
 ## Business problem
 
-Requests scattered across spreadsheets and conversations make ownership and urgent work difficult to track. The planned MVP brings tickets, priorities, assignments and workload statistics into one shared workspace.
+Requests scattered across spreadsheets and conversations make ownership and urgent work difficult to track. OpsTrack brings tickets, priorities, assignments and workload statistics into one shared workspace.
 
-## Repository structure
+## Features
 
-```text
-OpsTrack.sln
-backend/
-  OpsTrack.Api/             HTTP endpoints and composition root
-  OpsTrack.Application/     Future DTOs, use cases and interfaces
-  OpsTrack.Domain/          Future entities and business rules
-  OpsTrack.Infrastructure/  Future EF Core and identity implementations
-  OpsTrack.Tests/           xUnit integration and future unit tests
-frontend/                  React, TypeScript, Vite and React Router
-docs/                      Implementation roadmap
-```
+- Registration, login and one-hour JWT sessions; protected frontend routes and API endpoints.
+- Dashboard with real counts, completion rate, status/priority breakdowns and recent tickets.
+- Ticket creation, detail, editing, assignment and deletion with confirmation.
+- Creator-only editing/deletion, enforced by the API; assignment does not grant edit access.
+- Title search, status/priority/category filters, urgent/completed views, sorting and pagination.
+- Resolution notes required when resolving or closing a ticket.
+- Profile and tickets created by the current user.
+- Responsive English interface with the purple `#ad7fd7` accent, empty/loading/error states and keyboard-accessible forms/dialogs.
+- SQL Server and SQLite EF migrations, Swagger JWT support, unit/integration tests, Docker Compose and GitHub Actions.
 
-The three class libraries are intentionally empty in phase 1; project references establish their dependency boundaries.
+## Architecture
 
 ```mermaid
 flowchart LR
-  Browser[React + TypeScript] -->|HTTP /api through Vite proxy| API[ASP.NET Core API]
-  API --> Application
-  API --> Infrastructure
+  Browser[React + TypeScript] -->|REST / JSON / JWT| API[OpsTrack.Api]
+  API --> Application[OpsTrack.Application]
+  API --> Infrastructure[OpsTrack.Infrastructure]
   Infrastructure --> Application
-  Application --> Domain
-  Infrastructure -. Phase 2: EF Core .-> SQL[(SQL Server)]
+  Application --> Domain[OpsTrack.Domain]
+  Infrastructure -->|EF Core migrations| SQL[(SQL Server)]
+  Infrastructure -. local development .-> SQLite[(SQLite)]
 ```
 
-## Technology stack
+```text
+backend/
+  OpsTrack.Api/             Controllers, JWT, HTTP errors, composition and development seed
+  OpsTrack.Application/     DTOs, validation, ticket use cases and persistence contract
+  OpsTrack.Domain/          User, Ticket and enums; no framework dependencies
+  OpsTrack.Infrastructure/  EF contexts, queries, migrations and indexes
+  OpsTrack.Tests/           Unit tests and real API integration tests
+frontend/src/              React routes, components, API client and styles
+docs/                     Roadmap and portfolio walkthrough
+.github/workflows/ci.yml   Builds and tests, including SQL Server
+```
 
-Current: .NET 10 LTS, ASP.NET Core Web API, OpenAPI, xUnit, React, TypeScript, Vite, React Router and CSS.
+ASP.NET Core never serializes EF entities directly. Email addresses are normalized with a unique database index. Foreign keys preserve creator/assignee integrity. Dashboard aggregation and ticket pagination happen in the database.
 
-Planned: EF Core, SQL Server, JWT, Swagger authentication UI, Docker Compose and GitHub Actions. [.NET support policy](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core).
+## Stack
 
-## Local setup
+.NET 10 LTS, C#, ASP.NET Core, Entity Framework Core, SQL Server 2022, SQLite (local only), JWT bearer authentication, ASP.NET password hashing, Swagger/OpenAPI, xUnit, React 19, TypeScript, Vite, React Router, CSS, Docker and GitHub Actions.
 
-Install the .NET 10 SDK and Node.js 22.12+ with npm. No database or secrets are needed for phase 1.
+## Run locally
 
-From the repository root, in the first terminal:
+Requirements: **.NET 10 SDK** and **Node.js 22.12+ with npm 10+**. Docker and SQL Server are not required for the local SQLite mode.
+
+From the repository root, terminal 1:
 
 ```sh
 dotnet restore OpsTrack.sln
 dotnet run --project backend/OpsTrack.Api --launch-profile http
 ```
 
-In a second terminal:
+Terminal 2:
 
 ```sh
 cd frontend
@@ -61,55 +68,122 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173. The connection card should report that the API is connected. The API listens on http://localhost:5080. Vite proxies `/api` requests to the backend, so development does not require permissive CORS.
+Open **http://localhost:5173** and create an account. API: **http://localhost:5080**. Swagger: **http://localhost:5080/swagger**.
 
-If port 5173 is busy, stop the existing server; Vite deliberately does not silently select another port. If the API is offline, start it and use **Check connection**.
+Development uses SQLite in `backend/OpsTrack.Api/opstrack.db`, applies its migrations and generates a random signing key at startup. Data survives restarts; sessions do not survive an API restart unless you supply a stable local `Jwt__Secret`. Database files and secrets are ignored by Git. Vite proxies `/api` to the backend; no permissive CORS is needed.
+
+### Optional development demo data
+
+Before the first startup with an empty database, set `Demo__Password` to a password of your choice with at least 12 characters. Start the API in Development. This creates `alex@example.test` and `sam@example.test` plus eight realistic tickets. Both accounts use the password you supplied. Seeding is skipped outside Development and on a database that already has users. No fixed demo password is committed.
+
+PowerShell:
+
+```powershell
+$env:Demo__Password = Read-Host 'Choose a local demo password (12+ characters)' -MaskInput
+dotnet run --project backend/OpsTrack.Api --launch-profile http
+```
+
+Use `Read-Host -AsSecureString` and your preferred secret-management workflow on older PowerShell versions without `-MaskInput`, or simply register your own account through the UI.
+
+### SQL Server locally
+
+Supply environment variables before running the API:
+
+```text
+Database__Provider=SqlServer
+ConnectionStrings__DefaultConnection=Server=localhost,1433;Database=OpsTrack;User Id=YOUR_USER;Password=YOUR_PASSWORD;TrustServerCertificate=True
+Database__AutoMigrate=true
+Jwt__Secret=YOUR_RANDOM_SECRET_AT_LEAST_32_BYTES
+```
+
+`TrustServerCertificate=True` is for the local development container. A deployed SQL Server should use a trusted certificate and a least-privilege application identity.
 
 ## Configuration
 
-The root `.env.example` documents future configuration. Copy it to `.env` only when configuration is needed. .NET does **not** load this file automatically: supply backend settings with environment variables, user secrets, or the future Compose configuration. Vite reads the root `.env` for the development proxy only.
+Copy `.env.example` to `.env` for Docker Compose. **.NET does not load `.env` automatically**: use environment variables or .NET user secrets. Vite only reads the proxy target from this file. Never put secrets in frontend `VITE_*` variables.
 
-| Variable | Purpose | Required now? |
-| --- | --- | --- |
-| `API_PROXY_TARGET` | Vite proxy target; defaults to `http://localhost:5080` | No |
-| `SQL_SERVER_PASSWORD` | Future local SQL Server administrator password | No |
-| `ConnectionStrings__DefaultConnection` | Future EF Core SQL Server connection string | No |
-| `Jwt__Secret` | Future JWT signing secret; generate at least 32 random bytes | No |
-| `Jwt__Issuer` | Future token issuer | No |
-| `Jwt__Audience` | Future token audience | No |
+| Variable | Purpose |
+| --- | --- |
+| `SQL_SERVER_PASSWORD` | Required by Compose; strong SQL Server administrator password |
+| `JWT_SECRET` | Required by Compose; mapped to `Jwt__Secret` in the API |
+| `Jwt__Secret` | .NET signing secret, minimum 32 bytes; required outside Development/Testing |
+| `Jwt__Issuer` / `Jwt__Audience` | Default `OpsTrack.Api` / `OpsTrack.Web` |
+| `Database__Provider` | `SqlServer` or `Sqlite`; SQLite is rejected outside Development/Testing |
+| `ConnectionStrings__DefaultConnection` | EF database connection string |
+| `Database__AutoMigrate` | Apply migrations at startup; true in local Development and Compose |
+| `Demo__Password` | Optional Development seed password, at least 12 characters |
+| `API_PROXY_TARGET` | Vite proxy target; defaults to `http://localhost:5080` |
 
-Never commit real secrets or put them in frontend `VITE_*` variables, which are exposed to browsers.
+Generate separate cryptographically random values for the SQL password and JWT secret; avoid semicolons in the SQL password because Compose inserts it into a connection string.
+
+## Docker Compose
+
+Requires Docker with Linux containers and enough memory for SQL Server (at least 2 GB for SQL Server; 4 GB or more available to Docker is recommended). The development stack uses SQL Server Developer edition; running it accepts Microsoft's SQL Server EULA and is intended for development/testing.
+
+```sh
+# Copy .env.example to .env and populate SQL_SERVER_PASSWORD and JWT_SECRET first.
+docker compose up --build
+```
+
+Open **http://localhost:8080** and register. Compose starts SQL Server, waits for its health check, applies API migrations and serves React through Nginx. Only the frontend is exposed, on loopback. SQL data lives in the `sql-data` volume.
+
+```sh
+docker compose down
+```
+
+This stops containers and preserves database data. The Compose API runs in Production, so Swagger and demo seeding are disabled. This is a local demonstration configuration, not an internet production deployment; put HTTPS and managed secrets in place before hosting it. Production migration rollout should be a controlled deployment step rather than automatic startup migrations across multiple replicas.
 
 ## Build and test
 
 ```sh
-dotnet build OpsTrack.sln --configuration Release
-dotnet test OpsTrack.sln --configuration Release
+dotnet build OpsTrack.sln -c Release
+dotnet test OpsTrack.sln -c Release
 cd frontend
+npm ci
 npm run build
 ```
 
-The current integration test boots the real API in memory and checks the health response. Business-rule and authorization tests will arrive with those features.
+Unit tests check normalization, invalid input and ownership before persistence. Integration tests boot the real API with isolated migrated SQLite databases and test registration/login, protected routes, CRUD, assignment, creator ownership, validation, search/pagination and dashboard calculations.
+
+To run the same integration tests against SQL Server, set `TEST_SQL_CONNECTION` to an administrative connection on a **test-only instance** and run `dotnet test`. Each factory creates a uniquely named `OpsTrackTest_*` database and deletes only that database afterward.
+
+GitHub Actions restores/builds/tests .NET, runs the suite against SQLite and SQL Server, compiles React and builds both Docker images. SQL test credentials are generated during the run. Consult the actual Actions result before claiming that the SQL/container checks have passed.
+
+## EF migrations
+
+SQL Server and SQLite have separate context types, migrations and snapshots in Infrastructure. Do not apply one provider's migrations to another.
+
+```sh
+dotnet tool install --global dotnet-ef --version 10.0.11
+dotnet ef migrations add YourChange --context SqlServerOpsDbContext --project backend/OpsTrack.Infrastructure --startup-project backend/OpsTrack.Api --output-dir Migrations/SqlServer
+dotnet ef migrations add YourChange --context SqliteOpsDbContext --project backend/OpsTrack.Infrastructure --startup-project backend/OpsTrack.Api --output-dir Migrations/Sqlite
+```
+
+For explicit database updates, set `ConnectionStrings__DefaultConnection` and use `dotnet ef database update` with the same context/project/startup arguments.
 
 ## API documentation
 
-- `GET /api/health`: API process availability; does not check a database.
-- `GET /openapi/v1.json`: OpenAPI document in Development only.
+In Development, open `/swagger` or `/openapi/v1.json`. Register or log in, copy the returned JWT and use Swagger's **Authorize** button (paste the token without a `Bearer` prefix).
 
-Swagger UI and JWT testing are planned for phase 2. The development HTTP profile is local-only; production will require HTTPS.
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST | `/api/auth/register`, `/api/auth/login` | Public authentication; rate limited |
+| GET | `/api/users/me`, `/api/users` | Profile and assignee names |
+| GET / POST | `/api/tickets` | Filtered list / create |
+| GET / PUT / DELETE | `/api/tickets/{id}` | Read / owner update / owner delete |
+| GET | `/api/dashboard` | Shared workspace statistics |
+| GET | `/api/health` | Public API process health; not database readiness |
 
-## Docker setup
+List parameters: `search`, `status`, `priority`, `category`, `sort=newest|oldest|priority`, `mine=true`, `scope=all|urgent|completed`, `page`, `pageSize` (1–100). Unknown enum values and invalid ranges return 400. Errors use Problem Details. Public auth endpoints are limited to 20 requests per IP per minute.
 
-Docker and Compose are planned for phase 5 after persistence and authentication work. There is no Compose command to run in this phase.
+Urgent means High/Critical **and** Open/InProgress. The completion metric includes Resolved and Closed. All authenticated users share one workspace; there is no tenant separation.
 
-## Screenshots
+JWTs live in tab-scoped `sessionStorage`, are cleared on sign-out/expiry/401, and expire after one hour. This MVP has no refresh-token or server-side logout revocation. Avoid injecting untrusted HTML; React renders ticket content as text. A larger deployment should use a dedicated identity provider and revisit token storage.
 
-Placeholder: workspace foundation screenshot.
+## Portfolio
 
-Planned screenshots: dashboard, filtered ticket list, ticket detail and responsive layout once implemented.
+See [the demo walkthrough and engineering discussion](docs/PORTFOLIO.md). Screenshots to add after visual review: dashboard, filtered register, ticket detail and mobile layout.
 
-## Delivery roadmap
+## Future improvements
 
-See [the implementation roadmap](docs/ROADMAP.md). This foundation is not yet a completed full-stack MVP and should be presented as work in progress on a portfolio.
-
-Future improvements beyond the MVP: role-based access, audit history, Kafka events, GraphQL, MongoDB audit storage and Azure deployment. None are implemented in the MVP scope.
+Azure hosting, external identity, optimistic concurrency, role-based access, audit history and operational monitoring. Kafka events, GraphQL and MongoDB audit storage are optional future explorations, not implemented MVP features. Email, file uploads, notifications and real-time messaging are intentionally outside the scope.

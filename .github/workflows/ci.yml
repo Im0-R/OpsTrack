@@ -1,0 +1,58 @@
+name: Build and test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: dotnet restore OpsTrack.sln
+      - run: dotnet build OpsTrack.sln -c Release --no-restore
+      - run: dotnet test OpsTrack.sln -c Release --no-build --logger trx
+      - name: Start SQL Server for integration tests
+        shell: bash
+        run: |
+          SQL_PASS="$(openssl rand -hex 24)Aa1!"
+          echo "::add-mask::$SQL_PASS"
+          echo "TEST_SQL_CONNECTION=Server=localhost,1433;User Id=sa;Password=$SQL_PASS;TrustServerCertificate=True" >> "$GITHUB_ENV"
+          docker run -d --name opstrack-test-sql -p 127.0.0.1:1433:1433 -e ACCEPT_EULA=Y -e MSSQL_PID=Developer -e MSSQL_SA_PASSWORD="$SQL_PASS" mcr.microsoft.com/mssql/server:2022-latest
+          for attempt in {1..40}; do
+            if docker exec opstrack-test-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SQL_PASS" -C -Q 'SELECT 1' -b -o /dev/null; then exit 0; fi
+            sleep 3
+          done
+          exit 1
+      - name: Run the same tests against SQL Server
+        run: dotnet test OpsTrack.sln -c Release --no-build --logger trx --results-directory sql-test-results
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - name: Build frontend container
+        run: docker build -f frontend/Dockerfile -t opstrack-web .
+      - name: Build API container
+        run: docker build -f backend/OpsTrack.Api/Dockerfile -t opstrack-api .
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/TestResults/*.trx"
+      - name: Upload SQL Server test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-test-results
+          path: sql-test-results/*.trx
+      - name: Stop test SQL Server
+        if: always()
+        run: docker rm -f opstrack-test-sql || true

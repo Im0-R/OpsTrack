@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace OpsTrack.Tests;
 
-public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+public class HealthEndpointTests : IClassFixture<ApiFactory>
 {
     private readonly HttpClient client;
-    public HealthEndpointTests(WebApplicationFactory<Program> factory) => client = factory.CreateClient();
+    public HealthEndpointTests(ApiFactory factory) => client = factory.CreateClient();
 
     [Fact]
     public async Task Health_ReturnsHealthyService()

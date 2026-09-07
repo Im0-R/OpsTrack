@@ -11,3 +11,6 @@ dist/
 TestResults/
 *.log
 *.tsbuildinfo
+*.db
+*.db-shm
+*.db-wal
