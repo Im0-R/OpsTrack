@@ -2,6 +2,10 @@
 
 An internal operations workspace for reporting incidents and service requests, assigning work, and tracking resolution. A portfolio MVP built with **C# / ASP.NET Core, EF Core and React / TypeScript**.
 
+[![Build and test](https://github.com/Im0-R/OpsTrack/actions/workflows/ci.yml/badge.svg)](https://github.com/Im0-R/OpsTrack/actions/workflows/ci.yml)
+
+The first full MVP passed [GitHub Actions run 34162426345](https://github.com/Im0-R/OpsTrack/actions/runs/34162426345): backend build, 16 tests on SQLite, 16 tests on SQL Server, frontend build and both Docker image builds. This verifies the code and images; it does not claim a public deployment or an end-to-end Compose runtime check.
+
 ## Business problem
 
 Requests scattered across spreadsheets and conversations make ownership and urgent work difficult to track. OpsTrack brings tickets, priorities, assignments and workload statistics into one shared workspace.
@@ -148,6 +152,8 @@ Unit tests check normalization, invalid input and ownership before persistence. 
 To run the same integration tests against SQL Server, set `TEST_SQL_CONNECTION` to an administrative connection on a **test-only instance** and run `dotnet test`. Each factory creates a uniquely named `OpsTrackTest_*` database and deletes only that database afterward.
 
 GitHub Actions restores/builds/tests .NET, runs the suite against SQLite and SQL Server, compiles React and builds both Docker images. SQL test credentials are generated during the run. Consult the actual Actions result before claiming that the SQL/container checks have passed.
+
+CI also starts the complete Compose stack and runs `node scripts/smoke-compose.mjs` through Nginx. The smoke check covers the React entrypoint on deep links, authentication, SQL persistence, ownership, filtering, resolution validation and deletion. Run it only against a disposable test instance: it creates two accounts. Override `SMOKE_BASE_URL` if the test stack uses another URL.
 
 ## EF migrations
 

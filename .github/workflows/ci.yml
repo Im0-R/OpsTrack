@@ -33,14 +33,27 @@ jobs:
           exit 1
       - name: Run the same tests against SQL Server
         run: dotnet test OpsTrack.sln -c Release --no-build --logger trx --results-directory sql-test-results
+      - name: Release test SQL Server resources
+        run: docker rm -f opstrack-test-sql
       - run: npm ci
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
       - name: Build frontend container
-        run: docker build -f frontend/Dockerfile -t opstrack-web .
+        run: docker build -f frontend/Dockerfile -t opstrack-web:local .
       - name: Build API container
-        run: docker build -f backend/OpsTrack.Api/Dockerfile -t opstrack-api .
+        run: docker build -f backend/OpsTrack.Api/Dockerfile -t opstrack-api:local .
+      - name: Exercise the complete Compose stack through Nginx
+        shell: bash
+        run: |
+          export SQL_SERVER_PASSWORD="$(openssl rand -hex 24)Aa1!"
+          export JWT_SECRET="$(openssl rand -hex 48)"
+          echo "::add-mask::$SQL_SERVER_PASSWORD"
+          echo "::add-mask::$JWT_SECRET"
+          echo "SQL_SERVER_PASSWORD=$SQL_SERVER_PASSWORD" >> "$GITHUB_ENV"
+          echo "JWT_SECRET=$JWT_SECRET" >> "$GITHUB_ENV"
+          docker compose up -d --no-build --pull never
+          node scripts/smoke-compose.mjs
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,3 +69,6 @@ jobs:
       - name: Stop test SQL Server
         if: always()
         run: docker rm -f opstrack-test-sql || true
+      - name: Stop Compose and remove its disposable CI database
+        if: always()
+        run: docker compose down --volumes --remove-orphans || true
