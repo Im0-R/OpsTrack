@@ -4,7 +4,7 @@ An internal operations workspace for reporting incidents and service requests, a
 
 [![Build and test](https://github.com/Im0-R/OpsTrack/actions/workflows/ci.yml/badge.svg)](https://github.com/Im0-R/OpsTrack/actions/workflows/ci.yml)
 
-The first full MVP passed [GitHub Actions run 34162426345](https://github.com/Im0-R/OpsTrack/actions/runs/34162426345): backend build, 16 tests on SQLite, 16 tests on SQL Server, frontend build and both Docker image builds. This verifies the code and images; it does not claim a public deployment or an end-to-end Compose runtime check.
+The MVP passed [GitHub Actions run 34199271737](https://github.com/Im0-R/OpsTrack/actions/runs/34199271737): backend build, 16 tests on SQLite, 16 tests on SQL Server, frontend build, both Docker image builds and the complete Compose smoke check through Nginx. Public hosting has not yet been configured.
 
 ## Business problem
 

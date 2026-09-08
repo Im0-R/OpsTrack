@@ -2,9 +2,9 @@
 
 ## Verified release
 
-Commit: `ddb49dfd63f49db8dbe1e35b92762bf1d5c3de12`.
+Commit: `82e391c02335475e4f8d1ee11560c26bc3c3ce70`.
 
-[GitHub Actions run 34162426345](https://github.com/Im0-R/OpsTrack/actions/runs/34162426345) completed successfully.
+[GitHub Actions run 34199271737](https://github.com/Im0-R/OpsTrack/actions/runs/34199271737) completed successfully.
 
 | Check | Result |
 | --- | --- |
@@ -14,6 +14,7 @@ Commit: `ddb49dfd63f49db8dbe1e35b92762bf1d5c3de12`.
 | Clean npm install and TypeScript/Vite build | Passed |
 | Frontend Docker image build | Passed |
 | API Docker image build | Passed |
+| Full Compose startup and HTTP smoke check through Nginx | Passed |
 
 The workflow retains TRX reports as artifacts. Database tests create and delete isolated test databases; they do not use the local demonstration database.
 
@@ -26,8 +27,7 @@ The workflow retains TRX reports as artifacts. Database tests create and delete 
 
 ## Remaining checks
 
-- Run the complete Docker Compose stack and exercise it through Nginx.
 - Capture final desktop and mobile screenshots for the portfolio.
 - Select and configure a public .NET hosting environment, including HTTPS and managed secrets.
 
-These remaining checks are not implied by a successful Docker image build.
+The Compose smoke check verifies the React entrypoint on a deep link, JWT registration/login, SQL persistence, creator ownership, filters, required resolution notes, dashboard aggregation and deletion. It does not replace a full browser regression suite or validate a public hosting environment.

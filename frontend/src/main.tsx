@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Route, Routes, useLocation } from "react-router-dom";
 import { AuthPage, AuthProvider, Protected } from "./auth";
 import { Shell } from "./components";
 import { DashboardPage } from "./DashboardPage";
@@ -10,9 +10,18 @@ import { TicketFormPage } from "./TicketFormPage";
 import { ProfilePage } from "./ProfilePage";
 import "./app.css";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<AuthPage key="login" />} />
