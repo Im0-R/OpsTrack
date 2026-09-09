@@ -8,6 +8,7 @@ import {
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { api, readSession, saveSession } from "./api";
 import type { Session } from "./types";
+import { startDemo } from "./demo";
 
 const AuthContext = createContext<{
   session: Session | null;
@@ -68,6 +69,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   const location = useLocation();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState("");
   if (session) return <Navigate to="/" replace />;
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -129,6 +131,13 @@ export function AuthPage({ register = false }: { register?: boolean }) {
               ? "Join your team and bring the work together."
               : "Sign in to see what needs your attention."}
           </p>
+          <div className="demo-entry">
+            <button type="button" className="button primary full" disabled={busy} onClick={() => {
+              signIn(startDemo());
+              navigate("/", { replace: true });
+            }}>Try Demo →</button>
+            <small>No sign-up or email needed. Explore 8 sample tickets in your own browser sandbox.</small>
+          </div>
           <form onSubmit={submit}>
             {error && (
               <div role="alert" className="alert">
@@ -153,11 +162,17 @@ export function AuthPage({ register = false }: { register?: boolean }) {
               <input
                 type="email"
                 name="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
                 required
                 maxLength={254}
                 placeholder="you@company.com"
               />
+              {register && <>
+                <button type="button" className="text-link" onClick={() => setEmail(`guest-${crypto.randomUUID().slice(0, 12)}@example.test`)}>Use a demo email</button>
+                <small>No real email required and no email is sent. Keep this address and your password to sign in again.</small>
+              </>}
             </label>
             <label>
               Password

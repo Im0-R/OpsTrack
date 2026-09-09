@@ -1,11 +1,14 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { resetDemo } from "./demo";
 import { useAuth } from "./auth";
 import { date, label, ticketCode, type Ticket } from "./types";
 
 export function Shell() {
   const { session, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [demoRevision, setDemoRevision] = useState(0);
   const section = location.pathname.startsWith("/tickets")
     ? "Tickets"
     : location.pathname === "/profile"
@@ -59,8 +62,15 @@ export function Shell() {
             <i /> Operations workspace
           </span>
         </header>
+        {session?.mode === "demo" && <section className="demo-banner" aria-label="Demo workspace">
+          <div><strong>Your private demo</strong><span>Sample data stays in this tab. Try editing a ticket or creating your own.</span></div>
+          <div className="actions">
+            <button className="button" onClick={() => { resetDemo(); setDemoRevision(x => x + 1); navigate("/", { replace: true }); }}>Reset demo</button>
+            <button className="text-link" onClick={signOut}>Exit demo</button>
+          </div>
+        </section>}
         <main id="main" className="main-content">
-          <Outlet />
+          <Outlet key={demoRevision} />
         </main>
         <footer>
           OpsTrack <span>Built for better operations.</span>

@@ -4,7 +4,17 @@ An internal operations workspace for reporting incidents and service requests, a
 
 [![Build and test](https://github.com/Im0-R/OpsTrack/actions/workflows/ci.yml/badge.svg)](https://github.com/Im0-R/OpsTrack/actions/workflows/ci.yml)
 
-The MVP passed [GitHub Actions run 34199271737](https://github.com/Im0-R/OpsTrack/actions/runs/34199271737): backend build, 16 tests on SQLite, 16 tests on SQL Server, frontend build, both Docker image builds and the complete Compose smoke check through Nginx. Public hosting has not yet been configured.
+The MVP passed [GitHub Actions run 34199271737](https://github.com/Im0-R/OpsTrack/actions/runs/34199271737): backend build, 16 tests on SQLite, 16 tests on SQL Server, frontend build, both Docker image builds and the complete Compose smoke check through Nginx. The public demo runs behind HTTPS on a VPS; see the deployment guide below.
+
+## Live Demo
+
+[Open OpsTrack](https://opstrack.poedle.online/)
+
+Click **Try Demo** to explore eight realistic tickets immediately, with no account or email. The interactive sandbox runs in your browser tab: create, edit, assign and delete tickets, explore filters and reset the examples with **Reset demo**. Changes survive page refresh in the same tab when browser storage is available. Demo sessions last one hour; starting a new demo restores the examples. No demo data is sent to the API or SQL Server.
+
+To try the real backend, create an account. **Use a demo email** generates a fictional `@example.test` address; no real email or email verification is required. Keep this address and your password to sign in again. Registered accounts share a server workspace, so use synthetic data only.
+
+The deployment uses Nginx HTTPS, Docker Compose, the ASP.NET Core API and persistent SQL Server Express storage. See [deployment and maintenance](docs/DEPLOYMENT.md) for updates, logs, backups and rollback.
 
 ## Business problem
 
@@ -135,7 +145,7 @@ Open **http://localhost:8080** and register. Compose starts SQL Server, waits fo
 docker compose down
 ```
 
-This stops containers and preserves database data. The Compose API runs in Production, so Swagger and demo seeding are disabled. This is a local demonstration configuration, not an internet production deployment; put HTTPS and managed secrets in place before hosting it. Production migration rollout should be a controlled deployment step rather than automatic startup migrations across multiple replicas.
+This stops containers and preserves database data. The Compose API runs in Production, so Swagger and demo seeding are disabled. The base file is for local demonstration. The hosted demo additionally uses `docker-compose.demo.yml`, server-generated secrets and the host HTTPS reverse proxy; see [deployment](docs/DEPLOYMENT.md). Production migration rollout should be a controlled deployment step rather than automatic startup migrations across multiple replicas.
 
 ## Build and test
 
@@ -192,4 +202,4 @@ See [the demo walkthrough and engineering discussion](docs/PORTFOLIO.md). Screen
 
 ## Future improvements
 
-Azure hosting, external identity, optimistic concurrency, role-based access, audit history and operational monitoring. Kafka events, GraphQL and MongoDB audit storage are optional future explorations, not implemented MVP features. Email, file uploads, notifications and real-time messaging are intentionally outside the scope.
+External identity, optimistic concurrency, role-based access, audit history and operational monitoring. Kafka events, GraphQL and MongoDB audit storage are optional future explorations, not implemented MVP features. Email, file uploads, notifications and real-time messaging are intentionally outside the scope.

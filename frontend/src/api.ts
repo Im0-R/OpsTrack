@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Session } from "./types";
+import { demoRequest } from "./demo";
 
 export function readSession(): Session | null {
   try {
@@ -33,6 +34,7 @@ export async function api<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  if (activeSession?.mode === "demo") return demoRequest(path, options) as T;
   const headers = new Headers(options.headers);
   if (options.body) headers.set("Content-Type", "application/json");
   if (activeSession)

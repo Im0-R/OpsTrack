@@ -1319,3 +1319,29 @@ dialog > p {
     transition: none !important;
   }
 }
+.demo-entry {
+  padding: 18px;
+  margin: 20px 0 24px;
+  border: 1px solid #d7c4e9;
+  border-radius: 14px;
+  background: #f8f3fc;
+}
+.demo-entry small {
+  display: block;
+  margin-top: 10px;
+  line-height: 1.5;
+  color: #63576e;
+}
+.demo-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 28px;
+  background: #f8f3fc;
+  border-bottom: 1px solid #e3d5ed;
+}
+.demo-banner strong, .demo-banner span { display: block; }
+.demo-banner span { margin-top: 4px; font-size: 13px; color: #63576e; }
+.demo-banner .actions { flex-wrap: wrap; }

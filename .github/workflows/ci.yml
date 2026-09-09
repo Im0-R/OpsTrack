@@ -37,6 +37,8 @@ jobs:
         run: docker rm -f opstrack-test-sql
       - run: npm ci
         working-directory: frontend
+      - name: Verify isolated browser demo
+        run: node scripts/test-demo.mjs
       - run: npm run build
         working-directory: frontend
       - name: Build frontend container

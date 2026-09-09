@@ -10,7 +10,7 @@ export type Priority = (typeof priorities)[number];
 export type Category = (typeof categories)[number];
 export type Person = { id: string; name: string };
 export type User = Person & { email: string; createdAt: string };
-export type Session = { token: string; expiresAt: string; user: User };
+export type Session = { token: string; expiresAt: string; user: User; mode?: "demo" };
 export type Ticket = {
   id: string;
   title: string;
