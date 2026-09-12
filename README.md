@@ -74,5 +74,3 @@ cd frontend && npm ci && npm run build
 - Ticket activity history
 - Simple team roles
 - Optimistic concurrency for simultaneous edits
-
-This is a portfolio MVP, so notifications, uploads, external identity and multi-tenant workspaces are intentionally outside the current scope.
